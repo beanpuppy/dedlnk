@@ -40,13 +40,12 @@
   (doseq [l (all-links directory)]
     (let [file (:file l)
           link (:link l)
-          status (link-status link)
-          closest (link-closest link)]
+          status (link-status link)]
       (when (not= status 200)
         (println "----------")
         (println "File:" file)
         (println "Link" link "(" status ")")
-        (println "Archive:" closest)))))
+        (println "Archive:" (link-closest link))))))
 
 (def cli-options
   [["-d" "--dir" "Directory of files."]
