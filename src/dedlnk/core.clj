@@ -8,6 +8,7 @@
 (def h {"User-Agent" "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 11.2; rv:86.0) Gecko/20100101 Firefox/86.0"})
 (def link-regex #"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)")
 (def wayback-url "http://archive.org/wayback/available?url=")
+(def ignore-file "ignore.txt")
 
 (defn is-markdown? [x]
   (str/ends-with? x ".md"))
@@ -28,20 +29,30 @@
 (defn link->closest [link]
   (-> (link->wayback link) :archived_snapshots :closest :url))
 
+(defn ignored->links []
+  (if (.exists (io/file ignore-file))
+    (str/split-lines (slurp ignore-file))))
+
+(defn not-ignored? [link]
+  (not (.contains (ignored->links) link)))
+
 (defn file->links [file]
-  (re-seq link-regex (slurp file)))
+  (distinct
+    (filter not-ignored?
+      (for [x (re-seq link-regex (slurp file))]
+        (get x 0)))))
 
 (defn dir->links [directory]
   (for [x (dir->files directory)
         l (file->links x)]
-    {:file x :link (get l 0)}))
+    {:file x :link l}))
 
 (defn find-dedlnks [directory]
   (doseq [l (dir->links directory)]
     (let [file (:file l)
           link (:link l)
           status (link->status link)]
-      (when (not= status 200)
+      (when (and (not= status 200) (not= status 403))
         (println "----------")
         (println "File:" file)
         (println "Link" link "(" status ")")
