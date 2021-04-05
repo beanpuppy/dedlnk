@@ -12,40 +12,40 @@
 (defn is-markdown? [x]
   (str/ends-with? x ".md"))
 
-(defn files [directory]
+(defn dir->files [directory]
   (filter is-markdown? (map (fn [f]
                               (str directory "/" f)) (.list (io/file directory)))))
 
-(defn link-status [link]
+(defn link->status [link]
   (try
     (get (client/get link {:throw-exceptions false :headers h :cookie-policy :none}) :status)
     (catch Exception e "ERRCONNECT")))
 
-(defn link-wayback [link]
+(defn link->wayback [link]
   (let [res (clj-http.client/get (str wayback-url link))]
     (json/parse-string (:body res) true)))
 
-(defn link-closest [link]
-  (-> (link-wayback link) :archived_snapshots :closest :url))
+(defn link->closest [link]
+  (-> (link->wayback link) :archived_snapshots :closest :url))
 
-(defn file-links [file]
+(defn file->links [file]
   (re-seq link-regex (slurp file)))
 
-(defn all-links [directory]
-  (for [x (files directory)
-        l (file-links x)]
+(defn dir->links [directory]
+  (for [x (dir->files directory)
+        l (file->links x)]
     {:file x :link (get l 0)}))
 
 (defn find-dedlnks [directory]
-  (doseq [l (all-links directory)]
+  (doseq [l (dir->links directory)]
     (let [file (:file l)
           link (:link l)
-          status (link-status link)]
+          status (link->status link)]
       (when (not= status 200)
         (println "----------")
         (println "File:" file)
         (println "Link" link "(" status ")")
-        (println "Archive:" (link-closest link))))))
+        (println "Archive:" (link->closest link))))))
 
 (def cli-options
   [["-d" "--dir" "Directory of files."]
