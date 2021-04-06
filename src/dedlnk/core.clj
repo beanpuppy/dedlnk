@@ -10,12 +10,12 @@
 (def wayback-url "http://archive.org/wayback/available?url=")
 (def ignore-file "ignore.txt")
 
-(defn is-markdown? [x]
+(defn markdown? [x]
   (str/ends-with? x ".md"))
 
 (defn dir->files [directory]
-  (filter is-markdown? (map (fn [f]
-                              (str directory "/" f)) (.list (io/file directory)))))
+  (filter markdown? (map (fn [f]
+                           (str directory "/" f)) (.list (io/file directory)))))
 
 (defn link->status [link]
   (try
