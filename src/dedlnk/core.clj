@@ -20,7 +20,7 @@
 (defn link->status [link]
   (try
     (get (client/get link {:throw-exceptions false :headers h :cookie-policy :none}) :status)
-    (catch Exception e "ERRCONNECT")))
+    (catch Exception _ "ERRCONNECT")))
 
 (defn link->wayback [link]
   (let [res (clj-http.client/get (str wayback-url link))]
@@ -30,7 +30,7 @@
   (-> (link->wayback link) :archived_snapshots :closest :url))
 
 (defn ignored->links []
-  (if (.exists (io/file ignore-file))
+  (when (.exists (io/file ignore-file))
     (str/split-lines (slurp ignore-file))))
 
 (defn not-ignored? [link]
