@@ -38,9 +38,9 @@
 
 (defn file->links [file]
   (distinct
-    (filter not-ignored?
-      (for [x (re-seq link-regex (slurp file))]
-        (get x 0)))))
+   (filter not-ignored?
+           (for [x (re-seq link-regex (slurp file))]
+             (get x 0)))))
 
 (defn dir->links [directory]
   (for [x (dir->files directory)
